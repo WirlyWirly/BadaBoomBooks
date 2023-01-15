@@ -144,7 +144,7 @@ def clipboard_queue(folder, config):
         pyperclip.copy(clipboard_old)
 
     # - Wait for  url to be coppied
-    print(f"\nCopy the Audible or Goodreads URL for \"{book_path.name}/\"\nCopy 'skip' to skip the current book...           ", end='')
+    print(f"\nCopy the Audible URL for \"{book_path.name}/\"\nCopy 'skip' to skip the current book...           ", end='')
     while True:
         time.sleep(1)
         clipboard_current = pyperclip.paste()

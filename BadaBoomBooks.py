@@ -319,10 +319,13 @@ for key, value in config.items('urls'):
     else:
         output_path = folder.parent / f"{default_output}/"
 
-    author_folder = output_path / f"{metadata['author']}/"
+    # - Clean paths -
+    author_clean = re.sub(r"[^\w\-\.\(\) ]+", ' ', metadata['author'])
+    title_clean = re.sub(r"[^\w\-\.\(\) ]+", ' ', metadata['title'])
+    author_folder = output_path / f"{author_clean}/"
     author_folder.resolve()
     author_folder.mkdir(parents=True, exist_ok=True)
-    final_output = author_folder / f"{metadata['title']}/"
+    final_output = author_folder / f"{title_clean}/"
     metadata['final_output'] = final_output.resolve()
 
     # ----- [--copy] Copy/move book folder ---

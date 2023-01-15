@@ -3,8 +3,10 @@
 #### Quickly organize audiobooks using a terminal and a web-browser
 
 # Dependencies
+* A web-browser
 * Python 3.8+
 * `pip install -r requirements.txt`
+
 
 # Usage
 Move and organize audiobook folders into `{author}/{title}` using Audible metadata

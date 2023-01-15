@@ -116,7 +116,7 @@ def clipboard_queue(folder, config):
             log.debug("TinyTag audio file: {file}")
             track = TinyTag.get(str(file))
             try:
-                title = re.sub(r"\&", 'and', track.title)
+                title = re.sub(r"\&", 'and', track.album)
                 author = re.sub(r"\&", 'and', track.artist)
                 break
             except Exception as e:

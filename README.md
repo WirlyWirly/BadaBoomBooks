@@ -29,7 +29,7 @@ optional arguments:
   -d, --debug    Enable debugging to log file
   -i, --infotxt  Generate 'info.txt' file, used by SmartAudioBookPlayer to display book summary
   -o, --opf      Generate 'metadata.opf' file, used by Audiobookshelf to import metadata
-  -s , --site    Specify the site to perform initial searches [audible, goodreads, both]
+  -s , --site    Specify the site to perform initial searches [audible]
   -v, --version  show program's version number and exit
 
 Cheers to the community for providing our content and building our tools!
@@ -38,9 +38,9 @@ Cheers to the community for providing our content and building our tools!
 
 1) Call the script and pass it the audiobook folders you would like to process, including any optional arguments...
     python BadaBoomBooks.py "C:\Path\To\Audiobook_folder1" "C:\Path\To\Audiobook_folder2" ...
-    python BadaBoomBooks.py -c -s goodreads -i "C:\Path\To\Audiobook_folder1" "C:\Path\To\Audiobook_folder2" ...
+    python BadaBoomBooks.py -c -i -o "C:\Path\To\Audiobook_folder1" "C:\Path\To\Audiobook_folder2" ...
 
-2) Your browser will open and perform a web search for the current book, simply open the Audible\Goodreads page and copy the url to your clipboard.
+2) Your browser will open and perform a web search for the current book, simply open the Audible page and copy the url to your clipboard.
 
 3) After building the queue, the process will start and folders will be organized accordingly. Cheers!
 ```

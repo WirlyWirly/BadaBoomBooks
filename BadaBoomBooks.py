@@ -68,9 +68,9 @@ Cheers to the community for providing our content and building our tools!
 
 1) Call the script and pass it the audiobook folders you would like to process, including any optional arguments...
     python BadaBoomBooks.py "C:\Path\To\Audiobook_folder1\" "C:\Path\To\Audiobook_folder2" ...
-    python BadaBoomBooks.py -c -s goodreads -i "C:\Path\To\Audiobook_folder1\" "C:\Path\To\Audiobook_folder2" ...
+    python BadaBoomBooks.py -c -i -o "C:\Path\To\Audiobook_folder1\" "C:\Path\To\Audiobook_folder2" ...
 
-2) Your browser will open and perform a web search for the current book, simply open the Audible\Goodreads page and copy the url to your clipboard.
+2) Your browser will open and perform a web search for the current book, simply open the Audible page and copy the url to your clipboard.
 
 3) After building the queue, the process will start and folders will be organized accordingly. Cheers!
 """)
@@ -82,7 +82,8 @@ parser.add_argument('-c', '--copy', action='store_true', help='Copy folders inst
 parser.add_argument('-d', '--debug', action='store_true', help='Enable debugging to log file')
 parser.add_argument('-i', '--infotxt', action='store_true', help="Generate 'info.txt' file, used by SmartAudioBookPlayer to display book summary")
 parser.add_argument('-o', '--opf', action='store_true', help="Generate 'metadata.opf' file, used by Audiobookshelf to import metadata")
-parser.add_argument('-s', '--site', metavar='',  default='audible', choices=['audible', 'goodreads', 'both'], help="Specify the site to perform initial searches [audible, goodreads, both]")
+parser.add_argument('-s', '--site', metavar='',  default='audible', choices=['audible'], help="Specify the site to perform initial searches [audible]")
+# parser.add_argument('-s', '--site', metavar='',  default='audible', choices=['audible', 'goodreads', 'both'], help="Specify the site to perform initial searches [audible, goodreads, both]")
 parser.add_argument('-v', '--version', action='version', version=f"Version {__version__}")
 parser.add_argument('folders', metavar='folder', nargs='+', help='Audiobook folder(s) to be organized')
 
@@ -169,20 +170,20 @@ def clipboard_queue(folder, config):
             config['urls'][b64_folder] = b64_url
             print(f"\n\nAudible: {audible_url}")
             break
-        elif re.search(r"^http.+goodreads.+book/show/\d+", clipboard_current):
-            # --- A valid Goodreads URL
-            log.debug(f"Clipboard GoodReads match: {clipboard_current}")
+        # elif re.search(r"^http.+goodreads.+book/show/\d+", clipboard_current):
+        #     # --- A valid Goodreads URL
+        #     log.debug(f"Clipboard GoodReads match: {clipboard_current}")
 
-            goodreads_url = re.search(r"^http.+goodreads.+book/show/\d+", clipboard_current)[0]
-            b64_folder = base64.standard_b64encode(bytes(str(book_path.resolve()), 'utf-8')).decode()
-            b64_url = base64.standard_b64encode(bytes(goodreads_url, 'utf-8')).decode()
+        #     goodreads_url = re.search(r"^http.+goodreads.+book/show/\d+", clipboard_current)[0]
+        #     b64_folder = base64.standard_b64encode(bytes(str(book_path.resolve()), 'utf-8')).decode()
+        #     b64_url = base64.standard_b64encode(bytes(goodreads_url, 'utf-8')).decode()
 
-            log.debug(f"b64_folder: {b64_folder}")
-            log.debug(f"b64_url: {b64_url}")
+        #     log.debug(f"b64_folder: {b64_folder}")
+        #     log.debug(f"b64_url: {b64_url}")
 
-            config['urls'][b64_folder] = b64_url
-            print(f"\n\nGoodreads: {goodreads_url}")
-            break
+        #     config['urls'][b64_folder] = b64_url
+        #     print(f"\n\nGoodreads: {goodreads_url}")
+        #     break
         else:
             continue
 

@@ -4,7 +4,7 @@
 
 # Dependencies
 * Python 3.8+
-* `pip install -r requirements`
+* `pip install -r requirements.txt`
 
 # Usage
 Move and organize audiobook folders into `{author}/{title}` using Audible metadata

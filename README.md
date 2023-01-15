@@ -1,6 +1,22 @@
-`$ python ./BadaBoomBooks.py --help`
+# :book: BadaBoomBooks :bomb:
 
+### Quickly organize audiobooks using a terminal and a web-browser
+
+#### Dependencies
+* Python 3.8+ ([PortableApps version](https://sourceforge.net/projects/mwayne/files/PythonPortable/) for Windows)
+* `pip install -r requirements`
+
+
+
+
+**Basic Usage**: Move and organize audiobook folders into `{author}/{title}` using Audible metadata
+
+`$ python ./BadaBoomBooks.py '/Path/to/Audiobook-1/' '/Path/to/Audiobook-2/' ...`
+
+**Help**
 ```
+$ python ./BadaBoomBooks.py --help 
+
 =========================================================================================
 
     ______           _      ______                      ______             _

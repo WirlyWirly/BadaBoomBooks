@@ -1,12 +1,20 @@
 # :book: BadaBoomBooks :bomb:
 
-#### Quickly organize audiobooks using a terminal and a web-browser
+Quickly organize audiobooks using a terminal and a web-browser
 
 # Dependencies
 * A web-browser
 * Python 3.8+
 * `pip install -r requirements.txt`
 
+# Description
+After calling the script and passing it audiobook folders, it will read the ID3 tags of your audiobook and make a websearch for `{title} by {author}` in your web browser. 
+
+All you need to do is select the right web-page, copy the URL, and the folder will be added to the queue. The whole process takes only a few seconds per book, meaning you can organize even a very large library in very little time.
+
+Once every folder you passed has been added to the queue, the organization will begin, at which point no further user-input is required.
+
+The inconsistencies between audiobooks don't make for reliable matches using fully-automated solutions. This semi-automatic process means that you can be sure your books are matched properly, and it only takes a couple clicks and a few seconds.
 
 # Usage
 Move and organize audiobook folders into `{author}/{title}` using Audible metadata

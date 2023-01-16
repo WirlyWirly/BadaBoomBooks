@@ -10,7 +10,7 @@ Quickly organize audiobooks using a terminal and a web-browser
 # Description
 After calling the script and passing it audiobook folders, it will read the ID3 tags of your audiobook and make a websearch for `{title} by {author}` in your web browser. 
 
-All you need to do is select the right web-page, copy the URL, and the folder will be added to the queue. The whole process takes only a few seconds per book, meaning you can organize even a very large library in very little time.
+All you need to do is select the correct web-page, copy the URL, and the folder will be added to the queue. The whole process takes only a few seconds per book, meaning you can organize even a very large library in very little time.
 
 Once every folder you passed has been added to the queue, the organization will begin, at which point no further user-input is required.
 

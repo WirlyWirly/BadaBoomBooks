@@ -1,4 +1,4 @@
-__version__ = 0.2
+__version__ = 0.3
 
 from pathlib import Path
 import argparse
@@ -14,7 +14,7 @@ import webbrowser
 
 root_path = Path(sys.argv[0]).resolve().parent
 sys.path.append(str(root_path))
-from scrapers import parse_webpage, scrape_audible, scrape_goodreads
+from scrapers import http_request, api_audible, scrape_goodreads
 from optional import create_opf, create_info, flatten_folder, rename_tracks
 
 from bs4 import BeautifulSoup
@@ -241,6 +241,7 @@ for key, value in config.items('urls'):
 
     metadata = {
         'author': '',
+        'authors_multi': '',
         'title': '',
         'summary': '',
         'subtitle': '',
@@ -251,29 +252,42 @@ for key, value in config.items('urls'):
         'isbn': '',
         'asin': '',
         'series': '',
+        'sereis_multi': '',
         'volumenumber': '',
         'url': url,
         'skip': False,
+        'failed': False,
+        'failed_exception': '',
         'input_folder': str(folder.resolve().name)
     }
 
     print(f"\n----- {metadata['input_folder']} -----")
 
-    # --- Scrape Webpage ---
+    # --- Request Metadata ---
     while True:
-        parsed = parse_webpage(metadata, log)
 
         if 'audible.com' in metadata['url']:
-            if parsed.select_one('#bottom-0') is None:
-                continue
-            else:
-                metadata = scrape_audible(parsed, metadata, log)
+            # --- ASIN ---
+            metadata['asin'] = re.search(r"^http.+audible.+/pd/[\w-]+Audiobook/(\w{10})", metadata['url'])[1]
+            query = {'response_groups': 'contributors,product_desc,series,product_extended_attrs,media'}
+            metadata, response = http_request(metadata, log, f"https://api.audible.com/1.0/catalog/products/{metadata['asin']}", query)
+            if metadata['skip'] is True:
                 break
+            page = response.json()['product']
+            metadata = api_audible(metadata, page, log)
+            break
+
         elif 'goodreads.com' in metadata['url']:
+            metadata, response = http_request(metadata, log)
+            if metadata['skip'] is True:
+                break
+            parsed = BeautifulSoup(response.text, 'html.parser')
             if parsed.select_one('#bookTitle') is not None:
                 metadata = scrape_goodreads(parsed, metadata, log)
                 break
 
+    if metadata['failed'] is True:
+        failed_books.append(f"{metadata['input_folder']} ({metadata['failed_exception']})")
     if metadata['skip'] is True:
         continue
 

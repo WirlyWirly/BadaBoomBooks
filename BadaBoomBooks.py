@@ -66,7 +66,7 @@ Cheers to the community for providing our content and building our tools!
 
 1) Call the script and pass it the audiobook folders you would like to process, including any optional arguments...
     python BadaBoomBooks.py "C:\Path\To\Audiobook_folder1\" "C:\Path\To\Audiobook_folder2" ...
-    python BadaBoomBooks.py -s both -c -o -i "C:\Path\To\Audiobook_folder1\" "C:\Path\To\Audiobook_folder2\" ...
+    python BadaBoomBooks.py -s audible -c -o -i "C:\Path\To\Audiobook_folder1\" "C:\Path\To\Audiobook_folder2\" ...
 
 2) Your browser will open and perform a web search for the current book, simply select the correct web-page and copy the url to your clipboard.
 
@@ -81,7 +81,7 @@ parser.add_argument('-f', '--flatten', action='store_true', help="Flatten book f
 parser.add_argument('-i', '--infotxt', action='store_true', help="Generate 'info.txt' file, used by SmartAudioBookPlayer to display book summary")
 parser.add_argument('-o', '--opf', action='store_true', help="Generate 'metadata.opf' file, used by Audiobookshelf to import metadata")
 parser.add_argument('-r', '--rename', action='store_true', help="Rename audio tracks to '## - {title}' format")
-parser.add_argument('-s', '--site', metavar='',  default='audible', choices=['audible', 'goodreads', 'both'], help="Specify the site to perform initial searches [audible, goodreads, both]")
+parser.add_argument('-s', '--site', metavar='',  default='both', choices=['audible', 'goodreads', 'both'], help="Specify the site to perform initial searches [audible, goodreads, both]")
 parser.add_argument('-v', '--version', action='version', version=f"Version {__version__}")
 parser.add_argument('folders', metavar='folder', nargs='+', help='Audiobook folder(s) to be organized')
 
@@ -106,6 +106,9 @@ def clipboard_queue(folder, config):
 
     book_path = folder.resolve()
     # - Try for search terms from id3 tags
+
+    title = False
+    author = False
 
     for file in book_path.glob('**/*'):
         if file.suffix in ['.mp3', '.m4a', '.m4b', '.wma', '.flac']:
@@ -146,7 +149,7 @@ def clipboard_queue(folder, config):
         pyperclip.copy(clipboard_old)
 
     # - Wait for  url to be coppied
-    print(f"\nCopy the Audible\Goodreads URL for \"{book_path.name}/\"\nCopy 'skip' to skip the current book...           ", end='')
+    print(f"\nCopy the Audible or Goodreads URL for \"{book_path.name}\"\nCopy 'skip' to skip the current book...           ", end='')
     while True:
         time.sleep(1)
         clipboard_current = pyperclip.paste()

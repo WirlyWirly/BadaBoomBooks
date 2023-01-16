@@ -22,7 +22,7 @@ Move and organize audiobook folders into `{author}/{title}` using scraped metada
 `$ python ./BadaBoomBooks.py '/Path/to/Audiobook-1/' '/Path/to/Audiobook-2/' ...`
 
 # Tips
-* The default behaviour is to RENAME the audiobook folders. Pass the `-c` flag to copy instead.
+* The default behaviour is to RENAME the audiobook folders, pass the `-c` flag to copy instead.
 * The process is smoother if you have the terminal and browser side-by-side.
 * The terminal can sometimes have a character limit, avoid going over it by breaking up large jobs into smaller batches.
 

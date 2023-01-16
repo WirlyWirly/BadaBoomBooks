@@ -131,4 +131,4 @@ dmypy.json
 # Other
 *.swp
 queue.ini
-_BadaBoomBooks_/
+*/

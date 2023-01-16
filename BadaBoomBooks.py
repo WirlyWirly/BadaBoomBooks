@@ -1,4 +1,4 @@
-__version__ = 0.1
+__version__ = 0.2
 
 from pathlib import Path
 import argparse
@@ -14,8 +14,8 @@ import webbrowser
 
 root_path = Path(sys.argv[0]).resolve().parent
 sys.path.append(str(root_path))
-from scrapers import scrape_audible, scrape_goodreads
-from optional import create_opf, create_info, flatten_folder
+from scrapers import parse_webpage, scrape_audible, scrape_goodreads
+from optional import create_opf, create_info, flatten_folder, rename_tracks
 
 from bs4 import BeautifulSoup
 from tinytag import TinyTag
@@ -42,8 +42,6 @@ failed_books = []
 skipped_books = []
 success_books = []
 
-# --- Headers for http requests ---
-requests_headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36'}
 
 print(fr"""
 
@@ -68,22 +66,22 @@ Cheers to the community for providing our content and building our tools!
 
 1) Call the script and pass it the audiobook folders you would like to process, including any optional arguments...
     python BadaBoomBooks.py "C:\Path\To\Audiobook_folder1\" "C:\Path\To\Audiobook_folder2" ...
-    python BadaBoomBooks.py -c -i -o "C:\Path\To\Audiobook_folder1\" "C:\Path\To\Audiobook_folder2" ...
+    python BadaBoomBooks.py -s both -c -o -i "C:\Path\To\Audiobook_folder1\" "C:\Path\To\Audiobook_folder2\" ...
 
-2) Your browser will open and perform a web search for the current book, simply open the Audible page and copy the url to your clipboard.
+2) Your browser will open and perform a web search for the current book, simply select the correct web-page and copy the url to your clipboard.
 
 3) After building the queue, the process will start and folders will be organized accordingly. Cheers!
 """)
 
 # ===== Prepare vaild arguments =====
-parser.add_argument('-f', '--flatten', action='store_true', help="Flatten book folders, useful if the player has issues with multi-folder books")
 parser.add_argument('-O', dest='output', metavar='OUTPUT', help='Path to place organized folders')
 parser.add_argument('-c', '--copy', action='store_true', help='Copy folders instead of renaming them')
 parser.add_argument('-d', '--debug', action='store_true', help='Enable debugging to log file')
+parser.add_argument('-f', '--flatten', action='store_true', help="Flatten book folders, useful if the player has issues with multi-folder books")
 parser.add_argument('-i', '--infotxt', action='store_true', help="Generate 'info.txt' file, used by SmartAudioBookPlayer to display book summary")
 parser.add_argument('-o', '--opf', action='store_true', help="Generate 'metadata.opf' file, used by Audiobookshelf to import metadata")
-parser.add_argument('-s', '--site', metavar='',  default='audible', choices=['audible'], help="Specify the site to perform initial searches [audible]")
-# parser.add_argument('-s', '--site', metavar='',  default='audible', choices=['audible', 'goodreads', 'both'], help="Specify the site to perform initial searches [audible, goodreads, both]")
+parser.add_argument('-r', '--rename', action='store_true', help="Rename audio tracks to '## - {title}' format")
+parser.add_argument('-s', '--site', metavar='',  default='audible', choices=['audible', 'goodreads', 'both'], help="Specify the site to perform initial searches [audible, goodreads, both]")
 parser.add_argument('-v', '--version', action='version', version=f"Version {__version__}")
 parser.add_argument('folders', metavar='folder', nargs='+', help='Audiobook folder(s) to be organized')
 
@@ -108,24 +106,28 @@ def clipboard_queue(folder, config):
 
     book_path = folder.resolve()
     # - Try for search terms from id3 tags
-    title = False
-    author = False
 
     for file in book_path.glob('**/*'):
         if file.suffix in ['.mp3', '.m4a', '.m4b', '.wma', '.flac']:
-            log.debug("TinyTag audio file: {file}")
+            log.debug(f"TinyTag audio file: {file}")
             track = TinyTag.get(str(file))
             try:
-                title = re.sub(r"\&", 'and', track.album)
-                author = re.sub(r"\&", 'and', track.artist)
+                title = re.sub(r"\&", 'and', track.album).strip()
+                if title == '':
+                    title = False
+                author = re.sub(r"\&", 'and', track.artist).strip()
+                if author == '':
+                    author = False
                 break
             except Exception as e:
                 log.debug("Couldn't get search term metadata from ID3 tags, using foldername ({file})")
 
     if title and author:
         search_term = f"{title} by {author}"
+    elif title:
+        search_term = title
     else:
-        search_term = book_path.name
+        search_term = str(book_path.name)
 
     # - Prompt user to copy AudioBook url
     log.info(f"Search term: {search_term}")
@@ -144,7 +146,7 @@ def clipboard_queue(folder, config):
         pyperclip.copy(clipboard_old)
 
     # - Wait for  url to be coppied
-    print(f"\nCopy the Audible URL for \"{book_path.name}/\"\nCopy 'skip' to skip the current book...           ", end='')
+    print(f"\nCopy the Audible\Goodreads URL for \"{book_path.name}/\"\nCopy 'skip' to skip the current book...           ", end='')
     while True:
         time.sleep(1)
         clipboard_current = pyperclip.paste()
@@ -168,103 +170,27 @@ def clipboard_queue(folder, config):
             log.debug(f"b64_url: {b64_url}")
 
             config['urls'][b64_folder] = b64_url
-            print(f"\n\nAudible: {audible_url}")
+            print(f"\n\nAudible URL: {audible_url}")
             break
-        # elif re.search(r"^http.+goodreads.+book/show/\d+", clipboard_current):
-        #     # --- A valid Goodreads URL
-        #     log.debug(f"Clipboard GoodReads match: {clipboard_current}")
+        elif re.search(r"^http.+goodreads.+book/show/\d+", clipboard_current):
+            # --- A valid Goodreads URL
+            log.debug(f"Clipboard GoodReads match: {clipboard_current}")
 
-        #     goodreads_url = re.search(r"^http.+goodreads.+book/show/\d+", clipboard_current)[0]
-        #     b64_folder = base64.standard_b64encode(bytes(str(book_path.resolve()), 'utf-8')).decode()
-        #     b64_url = base64.standard_b64encode(bytes(goodreads_url, 'utf-8')).decode()
+            goodreads_url = re.search(r"^http.+goodreads.+book/show/\d+", clipboard_current)[0]
+            b64_folder = base64.standard_b64encode(bytes(str(book_path.resolve()), 'utf-8')).decode()
+            b64_url = base64.standard_b64encode(bytes(goodreads_url, 'utf-8')).decode()
 
-        #     log.debug(f"b64_folder: {b64_folder}")
-        #     log.debug(f"b64_url: {b64_url}")
+            log.debug(f"b64_folder: {b64_folder}")
+            log.debug(f"b64_url: {b64_url}")
 
-        #     config['urls'][b64_folder] = b64_url
-        #     print(f"\n\nGoodreads: {goodreads_url}")
-        #     break
+            config['urls'][b64_folder] = b64_url
+            print(f"\n\nGoodreads URL: {goodreads_url}")
+            break
         else:
             continue
 
     pyperclip.copy(clipboard_old)
     return config
-
-
-def scrape_webpage(folder, url):
-    # --- Attempt to get the webpage then scrape it for metadata ---
-
-    metadata = {
-        'author': '',
-        'title': '',
-        'summary': '',
-        'subtitle': '',
-        'narrator': '',
-        'publisher': '',
-        'publishyear': '',
-        'genres': '',
-        'isbn': '',
-        'asin': '',
-        'series': '',
-        'volumenumber': '',
-        'url': url,
-        'skip': False,
-        'input_folder': str(folder.resolve().name)
-    }
-    log.info(f"Metadata URL for get() request: {metadata['url']}")
-
-    # --- Request webpage ---
-    timer = 2
-    failed = False
-    while True:
-        try:
-            html_response = requests.get(url, headers=requests_headers)
-        except Exception as exc:
-            log.error(f"Requests HTML get error: {exc}")
-            if timer == 2:
-                print('\n\nBad response from webpage, retrying for up-to 25 seconds...')
-            elif timer >= 10:
-                log.error(f"Requests HTML get error: {exc}")
-                print(f"Failed to get webpage page, skipping {folder.name}...")
-                metadata['skip'] = True
-                failed_books.append(f"{folder.name}: Requests HTML get error: {exc}")
-                failed = True
-                break
-            time.sleep(timer)
-            timer = timer * 1.5
-        else:
-            break
-
-    if failed:
-        return metadata
-
-    log.info(f"Requests Status code: {str(html_response.status_code)}")
-    if html_response.status_code != requests.codes.ok:
-        log.error(f"Requests error: {str(html_response.status_code)}")
-        print(f"Bad requests status code, skipping {folder.name}: {html_response.status_code}")
-        metadata['skip'] = True
-        failed_books.append(f"{folder.name}: Requests status code = {html_response.status_code}")
-        return metadata
-
-    try:
-        html_response.raise_for_status()
-    except Exception as exc:
-        log.error(f"Requests status error: {exc}")
-        print(f"Requests raised an error, skipping {folder.name}: {exc}")
-        metadata['skip'] = True
-        failed_books.append(f"{folder.name}: Requests raised status = {exc}")
-        return metadata
-    else:
-        # --- Parse webpage for scraping ---
-        parsed = BeautifulSoup(html_response.text, 'html.parser')
-
-    # --- Scrape Webpage ---
-    if 'audible.com' in metadata['url']:
-        metadata = scrape_audible(parsed, metadata, log)
-    elif 'goodreads.com' in metadata['url']:
-        metadata = scrape_goodreads(parsed, metadata, log)
-
-    return metadata
 
 
 # ==========================================================================================================
@@ -309,9 +235,49 @@ for key, value in config.items('urls'):
 
     # ----- Scrape metadata -----
     folder = Path(folder).resolve()
-    metadata = scrape_webpage(folder, url)
+
+    metadata = {
+        'author': '',
+        'title': '',
+        'summary': '',
+        'subtitle': '',
+        'narrator': '',
+        'publisher': '',
+        'publishyear': '',
+        'genres': '',
+        'isbn': '',
+        'asin': '',
+        'series': '',
+        'volumenumber': '',
+        'url': url,
+        'skip': False,
+        'input_folder': str(folder.resolve().name)
+    }
+
+    print(f"\n----- {metadata['input_folder']} -----")
+
+    # --- Scrape Webpage ---
+    while True:
+        parsed = parse_webpage(metadata, log)
+
+        if 'audible.com' in metadata['url']:
+            if parsed.select_one('#bottom-0') is None:
+                continue
+            else:
+                metadata = scrape_audible(parsed, metadata, log)
+                break
+        elif 'goodreads.com' in metadata['url']:
+            if parsed.select_one('#bookTitle') is not None:
+                metadata = scrape_goodreads(parsed, metadata, log)
+                break
+
     if metadata['skip'] is True:
         continue
+
+    print(f"""
+Title: {metadata['title']}
+Author: {metadata['author']}
+URL: {metadata['url']}""")
 
     # ----- [--output] Prepare output folder -----
     if args.output:
@@ -328,12 +294,14 @@ for key, value in config.items('urls'):
     final_output = author_folder / f"{title_clean}/"
     metadata['final_output'] = final_output.resolve()
 
+    print(f"\nOutput: {metadata['final_output']}")
+
     # ----- [--copy] Copy/move book folder ---
     if args.copy:
-        print(f"\n\nCopying: {metadata['input_folder']} --> {metadata['final_output']}")
+        print(f"\nCopying...")
         shutil.copytree(folder, metadata['final_output'], dirs_exist_ok=True, copy_function=shutil.copy2)
     else:  # - Move folder (defult) -
-        print(f"\n\nMoving: {metadata['input_folder']} --> {metadata['final_output']}")
+        print(f"\nMoving...")
         try:
             folder.rename(metadata['final_output'])
         except Exception as e:
@@ -343,17 +311,26 @@ for key, value in config.items('urls'):
 
     # ----- [--flatten] Flatten Book Folders -----
     if args.flatten:
+        print('\nFlattening...')
         flatten_folder(metadata, log)
+
+    # ----- [--rename] Rename audio tracks -----
+    if args.rename:
+        print('\nRenaming...')
+        rename_tracks(metadata, log)
 
     # ----- [--opf] Create .opf file -----
     if args.opf:
+        print("\nCreating 'metadata.opf'")
         create_opf(metadata, opf_template)
 
     # ----- [--i] Create info.txt file -----
     if args.infotxt:
+        print("\nCreating 'info.txt'")
         create_info(metadata)
 
     # ---- Folder complete ----
+    print(f"\nDone!")
     success_books.append(f"{folder.stem}/ --> {output_path.stem}/{metadata['author']}/{metadata['title']}/")
 
 

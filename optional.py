@@ -97,3 +97,34 @@ def flatten_folder(metadata, log):
             shutil.rmtree(file.parent, ignore_errors=True)
 
     return
+
+
+def rename_tracks(metadata, log):
+    # --- Rename audio tracks to '## - {title}' format ---
+
+    # - Get all audio files -
+    audio_ext = ['mp3', 'm4b', 'm4a', 'ogg']
+    audio_files = []
+    for extension in audio_ext:
+        results = sorted(metadata['final_output'].rglob(f"./*.{extension}"))
+        for result in results:
+            audio_files.append(result)
+
+    # - Sort files for renaming
+    audio_files.sort()
+    log.debug(f"Globbed audio files for renaming = {str(audio_files)}")
+
+    # - Rename to '## - {title}.{extension}' in current folder
+    track = 1
+    padding = 2
+    if len(audio_files) < 1:
+        return
+    elif len(audio_files) >= 100:
+        padding = 3
+
+    for file in audio_files:
+        file.rename(file.parent / f"{str(track).zfill(padding)} - {metadata['title']}{file.suffix}")
+        log.debug(metadata['final_output'] / f"{str(track).zfill(padding)} - {metadata['title']}{file.suffix}")
+        track += 1
+
+    return

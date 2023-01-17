@@ -10,9 +10,9 @@ Quickly organize audiobooks using the terminal and a web-browser
 # Description
 The inconsistencies between audiobooks don't make for reliable matches using fully-automated solutions. This semi-automatic process means that you can be sure your books are matched properly, while only taking a couple clicks and a few seconds per book.
 
-After calling the script and passing it audiobook folders, it will read the ID3 tags of your audiobook and make a websearch for `{title} by {author}` in your web browser.
+After calling the script and passing it audiobook folders, it will read the ID3 tags of your audiobook and make a websearch for `{title} by {author}` in your web browser. If the tags are blank it'll fallback to the folder name.
 
-All you need to do is select the correct web-page, copy the URL, and the folder will be added to the queue. The whole process usually only takes only a few seconds per book.
+All you need to do is select the correct web-page, copy the URL, and the folder will be added to the queue. The whole process usually only takes a few seconds per book.
 
 Once every folder you passed has been added to the queue, the organization will begin, at which point no further user-input is required.
 

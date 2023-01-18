@@ -4,7 +4,7 @@ Quickly organize audiobooks using the terminal and a web-browser
 
 # Dependencies
 * A web-browser
-* Python 3.8+
+* [Python 3.8+](https://www.python.org/)
 * `pip install -r requirements.txt`
 
 # Description

@@ -2,29 +2,45 @@
 
 Quickly organize audiobooks using the terminal and a web-browser
 
+
 # Dependencies
 * A web-browser
 * [Python 3.8+](https://www.python.org/)
 * `pip install -r requirements.txt`
 
+
 # Description
-The inconsistencies between audiobooks don't make for reliable matches using fully-automated solutions. This semi-automatic process means that you can be sure your books are matched properly, while only taking a couple clicks and a few seconds per book.
+The inconsistencies between audiobooks don't make for reliable matches using fully-automated solutions. This program is a semi-automatic process, that way you can be sure your books are matched properly, while only taking a couple clicks and a few seconds per book.
 
 After calling the script and passing it audiobook folders, it will read the ID3 tags of your audiobook and make a websearch for `{title} by {author}` in your web browser. If the tags are blank it'll fallback to the folder name.
 
 All you need to do is select the correct web-page, copy the URL, and the folder will be added to the queue. The whole process usually only takes a few seconds per book.
 
-Once every folder you passed has been added to the queue, the organization will begin, at which point no further user-input is required.
+Once every folder you passed has been added to the queue, the organization will begin, at which point no further user-input is required. By default, folders are outputted to `./_BadaBoomBooks_/` in the same directory as the input folder, this way you can keep track of which ones you've already processed.
 
-# Usage
-Move and organize audiobook folders into `{author}/{title}` using scraped metadata
+# Examples
+
+### - Basic - 
+
+This is is the most basic usage, only folders are renamed, filenames will be unnaffected. For first-timers, I recommend running this on a copy of your audiobook to see how it works.
+
+ℹ️ Rename (move) audiobook folders to  `{author}/{title}` structure
 
 `$ python ./BadaBoomBooks.py '/Path/to/Audiobook-1/' '/Path/to/Audiobook-2/' ...`
+
+### - AudioBookShelf (Recommended) -
+The ASIN from Audible will be saved to a `metadata.opf` file, which AudioBookShelf will read during a library scan. Using that ASIN number, AudioBookShelf will be able to perform a perfect quick-match, which means you'll have the exact metadata corresponding to this book. The `info.txt` file is used by SmartAudioBookPlayer to display a summary, doesn't cost us anything to include it.
+
+ℹ️ Flatten folders, rename files to `{author}/{title}/## - {title}`, generate `metadata.opf`, and generate `info.txt`.
+
+`$python ./BadaBoomBooks.py -f -r -o -i '/Path/to/Audiobook-1/' '/Path/to/Audiobook-2/' ...`
+
 
 # Tips
 * The default behaviour is to RENAME the audiobook folders, pass the `-c` flag to copy instead.
 * The process is smoother if you have the terminal and browser side-by-side.
 * The terminal can sometimes have a character limit, avoid going over it by breaking up large jobs into smaller batches.
+* 
 
 ```
 $ python ./BadaBoomBooks.py --help

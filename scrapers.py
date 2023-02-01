@@ -1,8 +1,9 @@
 # --- Functions that scrape the parsed webpage for metadata ---
-import json
+import time
 import re
 import requests
 from bs4 import BeautifulSoup
+
 
 def http_request(metadata, log, url=False, query=False):
     # --- Parse a webpage for scraping ---
@@ -11,7 +12,6 @@ def http_request(metadata, log, url=False, query=False):
 
     # --- Request webpage ---
     timer = 2
-    failed = False
     while True:
         try:
             if url and query:
@@ -60,10 +60,8 @@ def http_request(metadata, log, url=False, query=False):
         return metadata, html_response
 
 
-
 def api_audible(metadata, page, log):
     # ----- Get metadata from Audible.com API -----
-
 
     # --- Author ---
     try:
@@ -73,30 +71,28 @@ def api_audible(metadata, page, log):
         if len(authors) > 1:
             authors_list = []
             for author in authors:
-                author_list.append(author)
+                authors_list.append(author)
             metadata['author'] = page['authors'][0]['name']
             metadata['authors_multi'] = authors_list
 
     except Exception as e:
-        log.info("No author in json, using '_unknown_' ({metadata['input_folder']}) | {e}")
+        log.info(f"No author in json, using '_unknown_' ({metadata['input_folder']}) | {e}")
         print(f" - Warning: No author found, placing in author folder '_unknown_': {metadata['input_folder']}")
         metadata['author'] = '_unknown_'  # If no author is found, use the name '_unknown_'
-
 
     # --- Title ---
     try:
         metadata['title'] = page['title']
     except Exception as e:
-        log.info("No title in json, using folder name ({metadata['input_folder']}) | {e}")
+        log.info(f"No title in json, using folder name ({metadata['input_folder']}) | {e}")
         print(f" - Warning: No title found, using folder name: {metadata['input_folder']}")
         metadata['title'] = metadata['input_folder']  # If no title is found, use original foldername
-
 
     # --- Summary ---
     try:
         summary_dirty = BeautifulSoup(page['publisher_summary'], 'html.parser')
         metadata['summary'] = summary_dirty.getText()
-        log.info(f"summary element: {str(element)}")
+        log.info(f"summary element: {str(summary_dirty)}")
     except Exception as e:
         log.info(f"No summary in json, leaving blank ({metadata['input_folder']} | {e}")
 
@@ -119,7 +115,7 @@ def api_audible(metadata, page, log):
             metadata['narrators_multi'] = narrators_list
 
     except Exception as e:
-        log.info("No narrator in json, leaving blank ({metadata['input_folder']}) | {e}")
+        log.info(f"No narrator in json, leaving blank ({metadata['input_folder']}) | {e}")
 
     # --- Publisher ---
     try:
@@ -162,7 +158,7 @@ def api_audible(metadata, page, log):
     # --- Volume Number ---
     try:
         metadata['volumenumber'] = page['series'][0]['sequence']
-        log.info(f"Volume number element: {str(element)}")
+        log.info(f"Volume number element: {page['series'][0]['sequence']}")
     except Exception as e:
         log.info(f"No volume number in json, leaving blank ({metadata['input_folder']}) | {e}")
 
@@ -209,7 +205,7 @@ def scrape_goodreads(parsed, metadata, log):
         element = parsed.select_one('#bookSeries')
         log.info(f"Series element: {str(element)}")
         if element is not None:
-            series = re.search('(\w.+),? #\d+', element.getText(strip=True))
+            series = re.search(r'(\w.+),? #\d+', element.getText(strip=True))
             metadata['series'] = series[1]
     except Exception as e:
         log.info(f"No series scraped, leaving blank ({metadata['input_folder']}) | {e}")
@@ -220,10 +216,9 @@ def scrape_goodreads(parsed, metadata, log):
             element = parsed.select_one('#bookSeries')
             log.info(f"Volume number element: {str(element)}")
             if element is not None:
-                number = re.search('\w.+,? #([\d\.]+)', element.getText(strip=True))
+                number = re.search(r'\w.+,? #([\d\.]+)', element.getText(strip=True))
                 metadata['volumenumber'] = number[1]
         except Exception as e:
             log.info(f"No volume number scraped, leaving blank ({metadata['input_folder']}) | {e}")
-
 
     return metadata

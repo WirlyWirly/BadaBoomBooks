@@ -64,6 +64,7 @@ def create_info(metadata):
     with txt_file.open('w', encoding='utf-8') as file:
         file.write(metadata['summary'])
 
+
 def flatten_folder(metadata, log):
     # --- Flatten folder and rename audio files to avoid conflicts ---
 
@@ -87,8 +88,9 @@ def flatten_folder(metadata, log):
         padding = 3
 
     for file in audio_files:
-        file.rename(metadata['final_output'] / f"{str(track).zfill(padding)} - {metadata['title']}{file.suffix}")
-        log.debug(metadata['final_output'] / f"{str(track).zfill(padding)} - {metadata['title']}{file.suffix}")
+        clean_title = re.sub(r"[^\w\-\.\(\) ]+", '', metadata['title'])
+        file.rename(metadata['final_output'] / f"{str(track).zfill(padding)} - {clean_title}{file.suffix}")
+        log.debug(metadata['final_output'] / f"{str(track).zfill(padding)} - {clean_title}{file.suffix}")
         track += 1
 
     # - Delete old folders -
@@ -123,8 +125,9 @@ def rename_tracks(metadata, log):
         padding = 3
 
     for file in audio_files:
-        file.rename(file.parent / f"{str(track).zfill(padding)} - {metadata['title']}{file.suffix}")
-        log.debug(metadata['final_output'] / f"{str(track).zfill(padding)} - {metadata['title']}{file.suffix}")
+        clean_title = re.sub(r"[^\w\-\.\(\) ]+", '', metadata['title'])
+        file.rename(file.parent / f"{str(track).zfill(padding)} - {clean_title}{file.suffix}")
+        log.debug(metadata['final_output'] / f"{str(track).zfill(padding)} - {clean_title}{file.suffix}")
         track += 1
 
     return

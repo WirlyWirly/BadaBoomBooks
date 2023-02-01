@@ -1,10 +1,9 @@
-__version__ = 0.3
+__version__ = 0.35
 
 from pathlib import Path
 import argparse
 import base64
 import configparser
-import json
 import logging as log
 import re
 import shutil
@@ -20,7 +19,6 @@ from optional import create_opf, create_info, flatten_folder, rename_tracks
 from bs4 import BeautifulSoup
 from tinytag import TinyTag
 import pyperclip
-import requests
 
 # --- Define globals ---
 config_file = root_path / 'queue.ini'
@@ -59,7 +57,7 @@ print(fr"""
 =========================================================================================
 """)
 
-parser = argparse.ArgumentParser(prog='python BadaBoomBooks.py', formatter_class=argparse.RawTextHelpFormatter, description='Organize audiobook folders through webscraping metadata', epilog=f"""
+parser = argparse.ArgumentParser(prog='python BadaBoomBooks.py', formatter_class=argparse.RawTextHelpFormatter, description='Organize audiobook folders through webscraping metadata', epilog="""
 Cheers to the community for providing our content and building our tools!
 
 ----------------------------------- INSTRUCTIONS --------------------------------------
@@ -123,7 +121,7 @@ def clipboard_queue(folder, config):
                     author = False
                 break
             except Exception as e:
-                log.debug("Couldn't get search term metadata from ID3 tags, using foldername ({file})")
+                log.debug(f"Couldn't get search term metadata from ID3 tags, using foldername ({file}) | {e}")
 
     if title and author:
         search_term = f"{title} by {author}"
@@ -224,6 +222,7 @@ print('\n===================================== PROCESSING ======================
 with config_file.open('w', encoding='utf-8') as file:
     config.write(file)
 
+
 # ===== Process all keys (folders) in .ini file =====
 config.read(config_file, encoding='utf-8')
 for key, value in config.items('urls'):
@@ -303,8 +302,9 @@ URL: {metadata['url']}""")
         output_path = folder.parent / f"{default_output}/"
 
     # - Clean paths -
-    author_clean = re.sub(r"[^\w\-\.\(\) ]+", ' ', metadata['author'])
-    title_clean = re.sub(r"[^\w\-\.\(\) ]+", ' ', metadata['title'])
+    author_clean = re.sub(r"[^\w\-\.\(\) ]+", '', metadata['author'])
+    title_clean = re.sub(r"[^\w\-\.\(\) ]+", '', metadata['title'])
+    log.info(f"Cleaned path names: Author ({author_clean} | Title ({title_clean}")
     author_folder = output_path / f"{author_clean}/"
     author_folder.resolve()
     author_folder.mkdir(parents=True, exist_ok=True)
@@ -315,10 +315,10 @@ URL: {metadata['url']}""")
 
     # ----- [--copy] Copy/move book folder ---
     if args.copy:
-        print(f"\nCopying...")
+        print("\nCopying...")
         shutil.copytree(folder, metadata['final_output'], dirs_exist_ok=True, copy_function=shutil.copy2)
     else:  # - Move folder (defult) -
-        print(f"\nMoving...")
+        print("\nMoving...")
         try:
             folder.rename(metadata['final_output'])
         except Exception as e:
@@ -347,7 +347,7 @@ URL: {metadata['url']}""")
         create_info(metadata)
 
     # ---- Folder complete ----
-    print(f"\nDone!")
+    print("\nDone!")
     success_books.append(f"{folder.stem}/ --> {output_path.stem}/{metadata['author']}/{metadata['title']}/")
 
 

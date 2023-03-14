@@ -1,6 +1,6 @@
 # :book: BadaBoomBooks :bomb:
 
-Quickly organize audiobooks using the terminal and a web-browser
+Quickly organize audiobooks using a terminal and web-browser
 
 
 # Dependencies
@@ -38,8 +38,9 @@ The ASIN from Audible will be saved to a `metadata.opf` file, which AudioBookShe
 
 # Tips
 * The default behaviour is to RENAME the audiobook folders, pass the `-c` flag to copy instead.
-* The process is smoother if you have the terminal and browser side-by-side.
-* The terminal can sometimes have a character limit, avoid going over it by breaking up large jobs into smaller batches.
+* The process is smoother if you keep the terminal and browser side-by-side.
+* Break large jobs into smaller batches, that way if the program runs into issues you haven't lost too much effort.
+* Linux Users: If you're have issues with clipboard detection, refer to the [pyperclip](https://pypi.org/project/pyperclip/) page for a possible solution.
 
 ```
 $ python ./BadaBoomBooks.py --help
@@ -53,7 +54,7 @@ $ python ./BadaBoomBooks.py --help
     | |_/ / (_| | (_| | (_| | |_/ / (_) | (_) | | | | | | |_/ / (_) | (_) |   <\__ \
     \____/ \__,_|\__,_|\__,_\____/ \___/ \___/|_| |_| |_\____/ \___/ \___/|_|\_\___/
 
-                            An audioBook organizer (v0.35)
+                            An audioBook organizer (v0.4)
 
 =========================================================================================
 

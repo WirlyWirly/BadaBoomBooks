@@ -131,4 +131,5 @@ dmypy.json
 # Other
 *.swp
 queue.ini
+goodreads_page.html
 */

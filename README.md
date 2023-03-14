@@ -20,7 +20,7 @@ Once every folder you passed has been added to the queue, the organization will 
 
 # Examples
 
-### - Basic - 
+### - Basic -
 
 This is is the most basic usage, only folders are renamed, filenames will be unnaffected. For first-timers, I recommend running this on a copy of your audiobook to see how it works.
 
@@ -40,7 +40,6 @@ The ASIN from Audible will be saved to a `metadata.opf` file, which AudioBookShe
 * The default behaviour is to RENAME the audiobook folders, pass the `-c` flag to copy instead.
 * The process is smoother if you have the terminal and browser side-by-side.
 * The terminal can sometimes have a character limit, avoid going over it by breaking up large jobs into smaller batches.
-* 
 
 ```
 $ python ./BadaBoomBooks.py --help
@@ -88,5 +87,4 @@ Cheers to the community for providing our content and building our tools!
 2) Your browser will open and perform a web search for the current book, simply select the correct web-page and copy the url to your clipboard.
 
 3) After building the queue, the process will start and folders will be organized accordingly. Cheers!
-
 ```

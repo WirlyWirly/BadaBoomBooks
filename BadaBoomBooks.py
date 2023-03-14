@@ -1,4 +1,4 @@
-__version__ = 0.35
+__version__ = 0.40
 
 from pathlib import Path
 import argparse
@@ -13,7 +13,7 @@ import webbrowser
 
 root_path = Path(sys.argv[0]).resolve().parent
 sys.path.append(str(root_path))
-from scrapers import http_request, api_audible, scrape_goodreads
+from scrapers import http_request, api_audible, scrape_goodreads_type1, scrape_goodreads_type2
 from optional import create_opf, create_info, flatten_folder, rename_tracks
 
 from bs4 import BeautifulSoup
@@ -57,7 +57,7 @@ print(fr"""
 =========================================================================================
 """)
 
-parser = argparse.ArgumentParser(prog='python BadaBoomBooks.py', formatter_class=argparse.RawTextHelpFormatter, description='Organize audiobook folders through webscraping metadata', epilog="""
+parser = argparse.ArgumentParser(prog='python BadaBoomBooks.py', formatter_class=argparse.RawTextHelpFormatter, description='Organize audiobook folders through webscraping metadata', epilog=r"""
 Cheers to the community for providing our content and building our tools!
 
 ----------------------------------- INSTRUCTIONS --------------------------------------
@@ -278,11 +278,19 @@ for key, value in config.items('urls'):
 
         elif 'goodreads.com' in metadata['url']:
             metadata, response = http_request(metadata, log)
+
+            if args.debug:
+                with Path(root_path / 'goodreads_page.html').open('w', encoding='utf-8') as html_page:
+                    html_page.write(response.text)
+
             if metadata['skip'] is True:
                 break
             parsed = BeautifulSoup(response.text, 'html.parser')
             if parsed.select_one('#bookTitle') is not None:
-                metadata = scrape_goodreads(parsed, metadata, log)
+                metadata = scrape_goodreads_type1(parsed, metadata, log)
+                break
+            elif parsed.select_one("script[type='application/ld+json']") is not None:
+                metadata = scrape_goodreads_type2(parsed, metadata, log)
                 break
 
     if metadata['failed'] is True:

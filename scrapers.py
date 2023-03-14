@@ -1,4 +1,5 @@
 # --- Functions that scrape the parsed webpage for metadata ---
+import json
 import time
 import re
 import requests
@@ -165,7 +166,7 @@ def api_audible(metadata, page, log):
     return metadata
 
 
-def scrape_goodreads(parsed, metadata, log):
+def scrape_goodreads_type1(parsed, metadata, log):
     # ----- Scrape a Goodreads.com book page for metadata -----
 
     # --- Author ---
@@ -218,6 +219,74 @@ def scrape_goodreads(parsed, metadata, log):
             if element is not None:
                 number = re.search(r'\w.+,? #([\d\.]+)', element.getText(strip=True))
                 metadata['volumenumber'] = number[1]
+        except Exception as e:
+            log.info(f"No volume number scraped, leaving blank ({metadata['input_folder']}) | {e}")
+
+    return metadata
+
+
+def scrape_goodreads_type2(parsed, metadata, log):
+    # ----- Scrape a Goodreads.com book page for metadata -----
+
+    try:
+        data = json.loads(parsed.select_one("script[type='application/ld+json']").getText(strip=True))
+    except Exception as exc:
+        log.error(f"JSON Parsing Error: {exc}")
+        print(f"Could not prepare JSON object, skipping {metadata['input_folder']}...")
+        metadata['skip'] = True
+        metadata['failed'] = True
+        metadata['failed_exception'] = f"{metadata['input_folder']}: BS4 to JSON loads: {exc}"
+        return metadata
+
+    # --- Author ---
+    try:
+        value = data['author'][0]['name']
+        log.info(f"Author element: {str(value)}")
+        metadata['author'] = value
+    except Exception as e:
+        log.info(f"No author in bs4, using '_unknown_' ({metadata['input_folder']}) | {e}")
+        print(f" - Warning: No author scraped, placing in author folder '_unknown_': {metadata['input_folder']}")
+        metadata['author'] = '_unknown_'  # If no author is found, use the name '_unknown_'
+
+    # --- Title ---
+    try:
+        title = re.search(r'^(.+?)(\s\(.+,\s.+\))?$', data['name'])
+        log.info(f"Title element: {str(title)}")
+        metadata['title'] = title[1]
+    except Exception as e:
+        log.info(f"No title scraped, using '_unknown_' ({metadata['input_folder']}) | {e}")
+        print(f" - Warning: No title scraped, using folder name: {metadata['input_folder']}")
+        metadata['title'] = metadata['input_folder']  # If no title is found, use original foldername
+
+    # --- Summary ---
+    try:
+        element = parsed.select_one("div[data-testid='description']")
+        log.info(f"Summary element: {str(element)}")
+        if element is not None:
+            summary = element.select_one("span[class='Formatted']")
+            metadata['summary'] = summary.getText()
+    except Exception as e:
+        log.info(f"No summary scraped, leaving blank ({metadata['input_folder']}) | {e}")
+
+    # --- Series ---
+    try:
+        element = parsed.select_one("div[class='BookPageTitleSection__title']").select_one('h3')
+        log.info(f"Series element: {str(element)}")
+        series = re.search(r'^(.+?)(#[\d\.]+)?$', element.getText(strip=True))[1]
+        if series is not None:
+            metadata['series'] = series
+    except Exception as e:
+        log.info(f"No series scraped, leaving blank ({metadata['input_folder']}) | {e}")
+
+    # --- Series Number ---
+    if metadata['series'] != '':
+        try:
+            element = parsed.select_one("div[class='BookPageTitleSection__title']").select_one('h3')
+            log.info(f"Series element: {str(element)}")
+            volume_number = re.search(r'^.+?#([\d\.]+)$', element.getText(strip=True))[1]
+            log.info(f"Volume number element: {str(volume_number)}")
+            if volume_number is not None:
+                metadata['volumenumber'] = volume_number
         except Exception as e:
             log.info(f"No volume number scraped, leaving blank ({metadata['input_folder']}) | {e}")
 
